@@ -29,9 +29,36 @@ async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
+
+
+    const movieCollection = client.db('movieDB').collection('movie');
+
+    app.get('/movie', async(req, res) => {
+      const cursor = movieCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+
+    })
+
+
+    app.post('/movie', async(req, res) => {
+      const newMovie = req.body;
+      console.log(newMovie);
+      const result = await movieCollection.insertOne(newMovie);
+      res.send(result);
+
+    })
+
+
+
+
+
+
+
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully movie portal server  connected to MongoDB!");
+    console.log("Pinged your deployment. You successfully  movie portal server  connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
@@ -46,7 +73,7 @@ run().catch(console.dir);
 
 
 app.get('/', (req, res) => {
-    res.send('movie portal running on movie portal server')
+    res.send('movie portal running update  on movie portal server')
 })
 
 app.listen(port, () => {

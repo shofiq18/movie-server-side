@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config()
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000;
 const app = express();
 
@@ -35,8 +35,43 @@ async function run() {
 
     app.get('/movie', async(req, res) => {
       const cursor = movieCollection.find();
-      const result = await cursor.toArray();
+      const result = await cursor.toArray(); 
       res.send(result);
+
+    })
+
+
+
+    app.get('/movie/top', async (req, res) => {
+      try {
+        const result = await movieCollection
+          .find()
+          .sort({ rating: -1 })
+          .limit(6)
+          .toArray();
+    
+        console.log(result); 
+        res.send(result);
+      } catch (error) {
+        console.error("Error fetching movies:", error);
+        res.status(500).send({ message: "Failed to fetch movies", error });
+      }
+    });
+    
+    
+
+
+
+
+
+
+    app.get('/movie/:id', async(req, res) => {
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)}
+      const movie = await movieCollection.findOne(query);
+      res.send(movie);
+
+
 
     })
 
@@ -73,9 +108,12 @@ run().catch(console.dir);
 
 
 app.get('/', (req, res) => {
-    res.send('movie portal running update  on movie portal server')
+    res.send('movie portal running update  on movie portal server vercel ')
 })
 
 app.listen(port, () => {
     console.log(`movie portal running on port : ${port}`)
 })
+
+
+ 

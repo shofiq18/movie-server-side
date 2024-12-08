@@ -39,6 +39,44 @@ async function run() {
       res.send(result);
 
     })
+    app.get('/update/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)}
+      const result = await movieCollection.findOne(query);
+      res.send(result);
+    } )
+    
+    // Update data 
+    
+    app.put('/update/:id', async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updateMovie = req.body;
+    
+      const movie = {
+        $set: {
+          poster: updateMovie.poster,
+          title: updateMovie.title,
+          genre: Array.isArray(updateMovie.genre) ? updateMovie.genre : [updateMovie.genre],
+          duration: Number(updateMovie.duration),
+          releaseYear: Number(updateMovie.releaseYear),
+          rating: Number(updateMovie.rating), // Ensure rating is defined and numeric
+          summary: updateMovie.summary,
+          email: updateMovie.email,
+        }
+      };
+    
+      try {
+        const result = await movieCollection.updateOne(filter, movie, options);
+        res.send(result);
+      } catch (error) {
+        console.error("Error updating movie:", error);
+        res.status(500).send({ message: "Failed to update movie", error });
+      }
+    });
+    
+
 
 
     app.delete('/movie/:id', async (req, res) => {

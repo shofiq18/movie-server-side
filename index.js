@@ -16,7 +16,7 @@ app.use(express.json());
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.5gtpi.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
+
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -27,11 +27,11 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
 
 
     const movieCollection = client.db('movieDB').collection('movie');
+    const favoritesCollection = client.db('movieDB').collection('favorites');
 
     app.get('/movie', async(req, res) => {
       const cursor = movieCollection.find();
@@ -47,7 +47,7 @@ async function run() {
     } )
     
     // Update data 
-    
+
     app.put('/update/:id', async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
@@ -61,7 +61,7 @@ async function run() {
           genre: Array.isArray(updateMovie.genre) ? updateMovie.genre : [updateMovie.genre],
           duration: Number(updateMovie.duration),
           releaseYear: Number(updateMovie.releaseYear),
-          rating: Number(updateMovie.rating), // Ensure rating is defined and numeric
+          rating: Number(updateMovie.rating),
           summary: updateMovie.summary,
           email: updateMovie.email,
         }
@@ -133,24 +133,79 @@ async function run() {
     })
 
 
+    
+    app.post('/favorites', async (req, res) => {
+      const favoriteMovie = req.body;
+      try {
+          const result = await favoritesCollection.insertOne(favoriteMovie);
+          res.status(201).send(result);
+      } catch (error) {
+          console.error('Error adding to favorites:', error);
+          res.status(500).send({ message: 'Server Error' });
+      }
+  });
+
+  app.get('/favorites', async (req, res) => {
+      const email = req.query.email;
+      if (!email) {
+          return res.status(400).send({ message: 'Email is required' });
+      }
+      try {
+          const result = await favoritesCollection.find({ email }).toArray();
+          res.status(200).send(result);
+      } catch (error) {
+          console.error('Error fetching favorites:', error);
+          res.status(500).send({ message: 'Server Error' });
+      }
+  });
+
+
+ 
+
+ 
+  
+
+
+  app.delete('/favorites/:id', async (req, res) => {
+    const id = req.params.id;
+    console.log("Received ID to delete:", id);
+
+    
+    if (!ObjectId.isValid(id)) {
+        return res.status(400).json({ success: false, message: 'Invalid ID format' });
+    }
+
+    try {
+        
+        const result = await favoritesCollection.deleteOne({ _id: new ObjectId(id) });
+
+        if (result.deletedCount === 0) {
+            return res.status(404).json({ success: false, message: 'Favorite not found' });
+        }
+
+        res.status(200).json({ success: true, message: 'Favorite deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting favorite:', error);
+        res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+    }
+});
 
 
 
 
 
 
-    // Send a ping to confirm a successful connection
+    
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully  movie portal server  connected to MongoDB!");
   } finally {
-    // Ensures that the client will close when you finish/error
-    // await client.close();
+    
   }
 }
 run().catch(console.dir);
 
 
-// mongodb database end here 
+
 
 
 
@@ -162,6 +217,5 @@ app.get('/', (req, res) => {
 app.listen(port, () => {
     console.log(`movie portal running on port : ${port}`)
 })
-
 
  

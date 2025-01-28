@@ -29,7 +29,7 @@ async function run() {
   try {
     await client.connect();
 
-
+// movie collection start here
     const movieCollection = client.db('movieDB').collection('movie');
     const favoritesCollection = client.db('movieDB').collection('favorites');
 
